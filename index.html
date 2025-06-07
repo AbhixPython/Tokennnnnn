@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook Profile Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            margin: auto;
+        }
+        h1 {
+            color: #007bff;
+            text-align: center;
+        }
+        p {
+            margin-bottom: 10px;
+        }
+        strong {
+            color: #555;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+            text-align: center;
+        }
+        .input-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .input-group label {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .input-group textarea {
+            width: 90%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            resize: vertical; /* Allow vertical resizing */
+            min-height: 60px; /* Minimum height for textarea */
+        }
+        .input-group button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        .input-group button:hover {
+            background-color: #218838;
+        }
+        .result-box {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            word-wrap: break-word; /* To prevent long IDs/emails from breaking layout */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Facebook Profile Checker</h1>
+
+        <div class="input-group">
+            <label for="accessToken">Paste your Facebook Access Token:</label>
+            <textarea id="accessToken" placeholder="Paste your Facebook Access Token here..."></textarea>
+            <button id="checkProfileBtn">Check Profile</button>
+        </div>
+
+        <div class="result-box" id="profile-info">
+            <p><strong>ID:</strong> <span id="user-id"></span></p>
+            <p><strong>Name:</strong> <span id="user-name"></span></p>
+            <p><strong>Email:</strong> <span id="user-email"></span></p>
+            <p class="error" id="error-message"></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('checkProfileBtn').addEventListener('click', getMyProfile);
+
+        async function getMyProfile() {
+            const accessToken = document.getElementById('accessToken').value.trim();
+            const userIdSpan = document.getElementById('user-id');
+            const userNameSpan = document.getElementById('user-name');
+            const userEmailSpan = document.getElementById('user-email');
+            const errorMessageDiv = document.getElementById('error-message');
+
+            // Clear previous results
+            userIdSpan.textContent = '';
+            userNameSpan.textContent = '';
+            userEmailSpan.textContent = '';
+            errorMessageDiv.textContent = '';
+
+            if (!accessToken) {
+                errorMessageDiv.textContent = 'Please enter an Access Token.';
+                return;
+            }
+
+            const url = 'https://graph.facebook.com/v18.0/me';
+            const fields = 'id,name,email';
+            const requestUrl = `${url}?access_token=${accessToken}&fields=${fields}`;
+
+            // Show a loading message
+            userIdSpan.textContent = 'Loading...';
+            userNameSpan.textContent = 'Loading...';
+            userEmailSpan.textContent = 'Loading...';
+
+            try {
+                const response = await fetch(requestUrl);
+                const data = await response.json();
+
+                if (response.ok) { // Check if status code is 2xx
+                    console.log("✅ Profile Info:", data);
+                    userIdSpan.textContent = data.id || 'N/A';
+                    userNameSpan.textContent = data.name || 'N/A';
+                    userEmailSpan.textContent = data.email || 'N/A (requires email permission)';
+                } else {
+                    console.error("❌ Error:", response.status, data);
+                    userIdSpan.textContent = ''; // Clear loading
+                    userNameSpan.textContent = ''; // Clear loading
+                    userEmailSpan.textContent = ''; // Clear loading
+                    errorMessageDiv.textContent = `Error: ${data.error.message || 'Unknown error'}`;
+                }
+            } catch (error) {
+                console.error("❌ Network or Fetch Error:", error);
+                userIdSpan.textContent = ''; // Clear loading
+                userNameSpan.textContent = ''; // Clear loading
+                userEmailSpan.textContent = ''; // Clear loading
+                errorMessageDiv.textContent = `Network Error: ${error.message}. Check console for details.`;
+            }
+        }
+    </script>
+</body>
+</html>
